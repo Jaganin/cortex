@@ -18,6 +18,8 @@ services:
       - 8.8.8.8
     environment:
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+      # Read by traefik/dynamic/middlewares.yml (autoclaude-proxy-auth) via Go templating
+      - AUTOCLAUDE_PROXY_AUTH_SECRET=${AUTOCLAUDE_PROXY_AUTH_SECRET}
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
