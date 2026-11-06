@@ -38,6 +38,11 @@ AUTHELIA_SESSION_SECRET=$(openssl rand -hex 32)
 AUTHELIA_STORAGE_ENCRYPTION_KEY=$(openssl rand -hex 32)
 ```
 
+Également requis pour AutoClaude (voir « AutoClaude — secret de proxy » plus bas) :
+```bash
+AUTOCLAUDE_PROXY_AUTH_SECRET=$(openssl rand -hex 32)
+```
+
 ## 3. Create Authelia user password
 
 ```bash
@@ -118,6 +123,36 @@ To update after an upstream change:
 cd /opt/cortex-internet/lbc-mcp && git pull
 cd /opt/cortex-internet && docker compose up -d --build leboncoin-mcp
 ```
+
+### AutoClaude — secret de proxy
+
+Traefik ajoute l'en-tête `X-Proxy-Auth` sur les requêtes vers
+`https://autoclaude.jaganin.duckdns.org` validées par Authelia. L'orchestrateur s'en sert
+pour vérifier qu'une requête est bien passée par Authelia, car ses ports `8000` et `3001`
+sont aussi joignables directement sur l'hôte. Sur les routes qui contournent Authelia
+(widget, `/api/credentials`, `/mcp`), Traefik supprime `X-Proxy-Auth` et les en-têtes
+`Remote-*` envoyés par le client. Détails dans `docs/services.md`.
+
+1. Générer le secret :
+   ```bash
+   openssl rand -hex 32
+   ```
+2. Le renseigner dans `/opt/cortex-internet/.env` :
+   ```bash
+   AUTOCLAUDE_PROXY_AUTH_SECRET=<valeur générée>
+   ```
+3. Renseigner **exactement la même valeur** dans `PROXY_AUTH_SECRET` du `.env` de
+   l'orchestrateur AutoClaude, puis redémarrer l'orchestrateur.
+4. Recréer Traefik pour qu'il lise la nouvelle variable (le templating
+   `{{ env "..." }}` est évalué au chargement de la config dynamique) :
+   ```bash
+   docker compose up -d traefik
+   ```
+
+Le secret n'est jamais versionné : il vit uniquement dans les deux `.env` (gitignorés).
+Cette configuration doit être en place, avec le secret renseigné des deux côtés,
+**avant** de déployer côté AutoClaude le contrôle de `X-Proxy-Auth`
+(Jaganin/AutoClaude#414), qui s'active sans phase de transition.
 
 ## Updates
 

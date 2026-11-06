@@ -118,6 +118,39 @@ access_control:
 
 Remove the `authelia` middleware from the Traefik router as well.
 
+## AutoClaude — identité Authelia et secret de proxy
+
+L'orchestrateur AutoClaude réserve ses routes sensibles (celles qui modifient quelque
+chose) aux requêtes **passées par Authelia**. Il ne peut pas se fier au seul en-tête
+`Remote-User` : ses ports `8000` et `3001` sont aussi joignables directement sur l'hôte,
+sans passer par Traefik (notamment depuis les conteneurs d'agents via
+`host.docker.internal`), donc n'importe qui pourrait envoyer un faux `Remote-User`.
+
+Traefik ajoute donc un **secret partagé** dans l'en-tête `X-Proxy-Auth`, uniquement sur
+les requêtes validées par Authelia. Deux middlewares dans `traefik/dynamic/middlewares.yml` :
+
+- `autoclaude-proxy-auth` : ajoute `X-Proxy-Auth: <secret>`. Le secret est lu depuis la
+  variable d'environnement `AUTOCLAUDE_PROXY_AUTH_SECRET` du conteneur Traefik grâce au
+  templating Go du provider fichier (`{{ env "AUTOCLAUDE_PROXY_AUTH_SECRET" }}`) : il
+  n'est jamais écrit dans le repo. Placé **après** `authelia` sur le routeur `autoclaude`
+  (`authelia`, `autoclaude-proxy-auth`, `secure-headers`). Le middleware `headers` écrase
+  la valeur, donc un `X-Proxy-Auth` envoyé par le client est remplacé.
+- `autoclaude-strip-identity` : met à `""` (donc supprime) `X-Proxy-Auth`, `Remote-User`,
+  `Remote-Groups`, `Remote-Name` et `Remote-Email`. Appliqué aux routeurs qui contournent
+  Authelia — `autoclaude-widget`, `autoclaude-credentials` et `autoclaude-mcp` — pour
+  qu'un client ne puisse jamais y faire passer une identité.
+
+Le secret se génère avec `openssl rand -hex 32` et doit être **identique des deux
+côtés** :
+
+- `AUTOCLAUDE_PROXY_AUTH_SECRET` dans le `.env` de cortex-internet (transmis à Traefik
+  par `docker-compose.yml`) ;
+- `PROXY_AUTH_SECRET` dans le `.env` de l'orchestrateur AutoClaude.
+
+Si la variable est absente côté Traefik, l'en-tête est envoyé vide (donc supprimé) et
+l'orchestrateur refuse les routes sensibles. Voir `docs/deployment.md` pour la mise en
+service.
+
 ## SSO via OIDC (preferred over ForwardAuth)
 
 When a service supports OAuth2/OIDC natively, configure Authelia as the OIDC provider
@@ -234,4 +267,5 @@ Point the service's OAuth settings to:
 | Immich | `photo.` | ❌ bypass | ✅ | SSO Authelia OIDC |
 | MyCGP | `mycgp.` | ❌ own auth | ❌ | Docker provider (blue/green), port 8020. UAT (`preview.`) and per-PR (`pr-<n>.preview.`) tiers documented above |
 | leboncoin-mcp | `leboncoin.` | ❌ Basic Auth | ❌ | Docker (build from `./lbc-mcp`), port 8040, transport MCP SSE. Basic Auth instead of Authelia — MCP clients can't do interactive TOTP login |
+| AutoClaude | `autoclaude.` | ✅ (sauf widget, `/api/credentials`, `/mcp`) | ❌ | Dashboard (3001) et orchestrateur (8000, `/mcp`). Secret `X-Proxy-Auth` ajouté après Authelia, identité supprimée sur les routes qui contournent Authelia — voir plus haut |
 | Phoenix | `phoenix.` | ❌ bypass | ✅ | Docker labels (`proxy` network), SSO Authelia OIDC. Container also joins the internal `phoenix` network for OTLP (cortex-phoenix repo) |

@@ -353,6 +353,7 @@ http:
               - "*.jaganin.duckdns.org"
       middlewares:
         - authelia
+        - autoclaude-proxy-auth
         - secure-headers
       service: autoclaude
 
@@ -367,6 +368,7 @@ http:
             sans:
               - "*.jaganin.duckdns.org"
       middlewares:
+        - autoclaude-strip-identity
         - secure-headers-widget
       service: autoclaude
 
@@ -381,6 +383,7 @@ http:
             sans:
               - "*.jaganin.duckdns.org"
       middlewares:
+        - autoclaude-strip-identity
         - secure-headers
       service: autoclaude
 
@@ -397,6 +400,7 @@ http:
             sans:
               - "*.jaganin.duckdns.org"
       middlewares:
+        - autoclaude-strip-identity
         - secure-headers
       service: autoclaude-orchestrator
 

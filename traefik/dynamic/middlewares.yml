@@ -49,3 +49,26 @@ http:
     leboncoin-mcp-auth:
       basicAuth:
         usersFile: /etc/traefik/secrets/leboncoin-mcp.htpasswd
+
+    # AutoClaude: shared secret proving to the orchestrator that a request went
+    # through Authelia (its ports 8000/3001 are also reachable directly on the
+    # host, so Remote-User alone can't be trusted). Must come right after
+    # `authelia`; the headers middleware overwrites any client-sent X-Proxy-Auth.
+    # The value is read from the Traefik container's environment via the file
+    # provider's Go templating, so it never lands in the repo. It must equal
+    # PROXY_AUTH_SECRET in the AutoClaude orchestrator's .env.
+    autoclaude-proxy-auth:
+      headers:
+        customRequestHeaders:
+          X-Proxy-Auth: '{{ env "AUTOCLAUDE_PROXY_AUTH_SECRET" }}'
+
+    # AutoClaude: drop any identity a client tries to pass on the routers that
+    # bypass Authelia (widget, credentials, MCP). An empty value removes the header.
+    autoclaude-strip-identity:
+      headers:
+        customRequestHeaders:
+          X-Proxy-Auth: ""
+          Remote-User: ""
+          Remote-Groups: ""
+          Remote-Name: ""
+          Remote-Email: ""
