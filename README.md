@@ -1,4 +1,6 @@
-# cortex-internet
+# cortex
+
+> Anciennement `cortex-internet`. Le dossier de déploiement sur Cortex reste `/opt/cortex-internet`.
 
 Secure internet exposure of Cortex services via **Traefik** (reverse proxy) and **Authelia** (SSO + 2FA authentication).
 
@@ -63,7 +65,7 @@ docker compose up -d
 ## Directory structure
 
 ```
-cortex-internet/
+cortex/
 ├── docker-compose.yml        # Main stack
 ├── .env.example              # Environment variables template
 ├── traefik/
@@ -77,6 +79,8 @@ cortex-internet/
 ├── scripts/
 │   ├── install.sh            # Bootstrap script (run as root)
 │   └── update-duckdns.sh     # DuckDNS IP updater (cron)
+├── agents/
+│   └── sysops/               # Agent AutoClaude SysOps (patchs OS, montées de version)
 └── docs/
     ├── architecture.md       # Detailed architecture
     ├── deployment.md         # Step-by-step deployment guide

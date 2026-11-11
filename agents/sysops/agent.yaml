@@ -1,0 +1,76 @@
+id: sysops
+name: SysOps Cortex
+description: >-
+  Supervision système de Cortex : patchs de l'OS, santé de l'hôte et des conteneurs,
+  montées de version des composants (Arr*, Paperless, Traefik, Authelia, etc.).
+  Observe via le MCP cortex-ops (lecture seule) et ouvre des tickets AutoClaude dans
+  les repos concernés. Aucun changement appliqué sur la machine.
+
+runtime:
+  provider: claude
+  model: claude-opus-5-5
+  fallback_provider: codex
+  image: default
+
+instructions:
+  system: prompt.md
+  task: |
+    Passage SysOps ({{ trigger.type }}). Reprendre l'état de la mémoire, inspecter
+    Cortex, ouvrir ou mettre à jour les tickets nécessaires et finir par le bilan.
+
+# Every 3-4 days (Monday and Thursday), 06:00 UTC. A fixed weekday pair is used rather
+# than `*/3` in day-of-month, which resets at each month end and would give uneven gaps.
+triggers:
+  - type: manual
+  - type: cron
+    schedule: "0 6 * * 1,4"
+concurrency: skip
+
+mcp:
+  - ref: cortex-ops
+    tools:
+      # Read-only inspection of the host. The connector does not exist in the catalog
+      # yet (see knowledge/cortex-ops-contrat.md); no mutating tool may be allowed here.
+      allow:
+        - os_status
+        - apt_upgradable
+        - reboot_required
+        - disk_usage
+        - docker_ps
+        - docker_image_versions
+        - service_health
+        - journal_errors
+        - backup_status
+        - cert_expiry
+  - ref: autoclaude
+    tools:
+      # No close, merge, resume, stop or deploy tools.
+      allow:
+        - board_list
+        - issue_get
+        - issue_create
+        - issue_update
+        - issue_comment
+        - issue_move
+        - issue_agent_runs
+        - agent_runs_recent
+        - repo_docs
+
+workspace:
+  repos:
+    - Jaganin/cortex
+    - Jaganin/cortex-arr
+  github: read
+
+memory:
+  mode: write
+  max_kb: 64
+
+budget:
+  max_turns: 100
+  max_duration: 40m
+  priority: P2
+  quota_share: 10%
+
+notify:
+  on: [waiting_input, failed, done]

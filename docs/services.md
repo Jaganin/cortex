@@ -143,7 +143,7 @@ les requêtes validées par Authelia. Deux middlewares dans `traefik/dynamic/mid
 Le secret se génère avec `openssl rand -hex 32` et doit être **identique des deux
 côtés** :
 
-- `AUTOCLAUDE_PROXY_AUTH_SECRET` dans le `.env` de cortex-internet (transmis à Traefik
+- `AUTOCLAUDE_PROXY_AUTH_SECRET` dans le `.env` de cortex (transmis à Traefik
   par `docker-compose.yml`) ;
 - `PROXY_AUTH_SECRET` dans le `.env` de l'orchestrateur AutoClaude.
 
