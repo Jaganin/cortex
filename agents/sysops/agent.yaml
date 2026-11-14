@@ -3,7 +3,7 @@ name: SysOps Cortex
 description: >-
   Supervision système de Cortex : patchs de l'OS, santé de l'hôte et des conteneurs,
   montées de version des composants (Arr*, Paperless, Traefik, Authelia, etc.).
-  Observe via le MCP cortex-ops (lecture seule) et ouvre des tickets AutoClaude dans
+  Observe les machines en SSH (commandes whitelistées côté machine) et ouvre des tickets AutoClaude dans
   les repos concernés. Aucun changement appliqué sur la machine.
 
 runtime:
@@ -26,22 +26,10 @@ triggers:
     schedule: "0 6 * * 1,4"
 concurrency: skip
 
+# SSH access to Cortex and the Raspberry Pi (whitelisted commands enforced on the machine,
+# restricted key + sudoers) is pending Jaganin/AutoClaude#491. Once delivered, declare
+# `ssh: [{ref: cortex}, {ref: pi}]` here. Until then the agent has no access to the hosts.
 mcp:
-  - ref: cortex-ops
-    tools:
-      # Read-only inspection of the host (cortex-ops/ server, contract in
-      # knowledge/cortex-ops-contrat.md); no mutating tool may be allowed here.
-      allow:
-        - os_status
-        - apt_upgradable
-        - reboot_required
-        - disk_usage
-        - docker_ps
-        - docker_image_versions
-        - service_health
-        - journal_errors
-        - backup_status
-        - cert_expiry
   - ref: autoclaude
     tools:
       # No close, merge, resume, stop or deploy tools.

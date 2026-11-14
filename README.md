@@ -76,10 +76,8 @@ cortex/
 ├── authelia/
 │   ├── configuration.yml     # Authelia config
 │   └── users_database.yml    # Local user database (bcrypt)
-├── cortex-ops/               # Read-only MCP server for the SysOps agent (not exposed by Traefik)
 ├── scripts/
 │   ├── install.sh            # Bootstrap script (run as root)
-│   ├── cortex-ops-facts.sh   # Host facts for cortex-ops (cron)
 │   └── update-duckdns.sh     # DuckDNS IP updater (cron)
 ├── agents/
 │   └── sysops/               # Agent AutoClaude SysOps (patchs OS, montées de version)
