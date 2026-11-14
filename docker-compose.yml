@@ -106,10 +106,67 @@ services:
       - "traefik.http.routers.leboncoin-mcp.middlewares=leboncoin-mcp-auth@file,secure-headers@file"
       - "traefik.http.services.leboncoin-mcp.loadbalancer.server.port=8040"
 
+  # Read-only MCP server for the AutoClaude SysOps agent (#43), contract in
+  # agents/sysops/knowledge/cortex-ops-contrat.md. Not routed by Traefik: only published
+  # on the docker0 gateway, where the AutoClaude orchestrator reaches it
+  # (connector `cortex-ops`, http://172.17.0.1:8050/mcp, Bearer CORTEX_OPS_TOKEN).
+  cortex-ops:
+    build: ./cortex-ops
+    container_name: cortex-ops
+    restart: unless-stopped
+    # root without capabilities: enough to read the root-owned apt and journal logs,
+    # nothing else (read-only rootfs, no privilege escalation)
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    networks:
+      - proxy         # TLS handshakes with traefik:443 (cert_expiry)
+      - cortex-ops    # Docker socket proxy
+    ports:
+      - "${CORTEX_OPS_BIND:-172.17.0.1}:8050:8050"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CORTEX_OPS_TOKEN=${CORTEX_OPS_TOKEN}
+      - CORTEX_OPS_ALLOWED_HOSTS=${CORTEX_OPS_BIND:-172.17.0.1}:*
+    volumes:
+      - ./cortex-ops/config.yml:/app/config.yml:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/apt/sources.list.d:/host/etc/apt/sources.list.d:ro
+      - /var/lib/dpkg:/host/var/lib/dpkg:ro
+      - /var/lib/apt/lists:/host/var/lib/apt/lists:ro
+      - /var/log/apt:/host/var/log/apt:ro
+      - /var/log/journal:/host/var/log/journal:ro
+      - /var/lib/cortex-ops/facts:/host/facts:ro
+      - /var/lib/cortex-ops/backups:/host/backups:ro
+    depends_on:
+      - cortex-ops-docker
+
+  # Docker API for cortex-ops, GET on containers and images only (POST=0: no start,
+  # stop, exec...). Only reachable on the internal cortex-ops network.
+  cortex-ops-docker:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: cortex-ops-docker
+    restart: unless-stopped
+    networks:
+      - cortex-ops
+    environment:
+      - CONTAINERS=1
+      - IMAGES=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
 networks:
   proxy:
     name: proxy
     driver: bridge
+  cortex-ops:
+    internal: true
 
 volumes:
   traefik-certs:

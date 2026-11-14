@@ -268,4 +268,5 @@ Point the service's OAuth settings to:
 | MyCGP | `mycgp.` | ❌ own auth | ❌ | Docker provider (blue/green), port 8020. UAT (`preview.`) and per-PR (`pr-<n>.preview.`) tiers documented above |
 | leboncoin-mcp | `leboncoin.` | ❌ Basic Auth | ❌ | Docker (build from `./lbc-mcp`), port 8040, transport MCP SSE. Basic Auth instead of Authelia — MCP clients can't do interactive TOTP login |
 | AutoClaude | `autoclaude.` | ✅ (sauf widget, `/api/credentials`, `/mcp`) | ❌ | Dashboard (3001) et orchestrateur (8000, `/mcp`). Secret `X-Proxy-Auth` ajouté après Authelia, identité supprimée sur les routes qui contournent Authelia — voir plus haut |
+| cortex-ops | — (pas de route) | ❌ Bearer | ❌ | MCP en lecture seule de l'agent SysOps, port 8050 publié sur `172.17.0.1` seulement (orchestrateur AutoClaude). Voir `docs/deployment.md` |
 | Phoenix | `phoenix.` | ❌ bypass | ✅ | Docker labels (`proxy` network), SSO Authelia OIDC. Container also joins the internal `phoenix` network for OTLP (cortex-phoenix repo) |

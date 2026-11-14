@@ -29,8 +29,8 @@ concurrency: skip
 mcp:
   - ref: cortex-ops
     tools:
-      # Read-only inspection of the host. The connector does not exist in the catalog
-      # yet (see knowledge/cortex-ops-contrat.md); no mutating tool may be allowed here.
+      # Read-only inspection of the host (cortex-ops/ server, contract in
+      # knowledge/cortex-ops-contrat.md); no mutating tool may be allowed here.
       allow:
         - os_status
         - apt_upgradable

@@ -16,6 +16,9 @@ lbc-mcp/
 # Traefik basic-auth secrets (generated on Cortex, not tracked here)
 traefik/secrets/
 
+# Python
+__pycache__/
+
 # OS / IDE
 .DS_Store
 Thumbs.db
