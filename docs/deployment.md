@@ -19,7 +19,7 @@ On the **Freebox** (or Synology if it's the NAT entry point), add:
 
 ```bash
 # Clone and bootstrap (as root)
-git clone https://github.com/Jaganin/cortex-internet.git /opt/cortex-internet
+git clone https://github.com/Jaganin/cortex.git /opt/cortex-internet
 cd /opt/cortex-internet
 bash scripts/install.sh
 ```

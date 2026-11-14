@@ -1,12 +1,12 @@
 #!/bin/bash
-# Bootstrap script for cortex-internet
+# Bootstrap script for cortex
 # Run as root on Cortex
 set -euo pipefail
 
 INSTALL_DIR="/opt/cortex-internet"
-REPO_URL="https://github.com/Jaganin/cortex-internet.git"
+REPO_URL="https://github.com/Jaganin/cortex.git"
 
-echo "=== cortex-internet bootstrap ==="
+echo "=== cortex bootstrap ==="
 
 # --- Docker ---
 if ! command -v docker &>/dev/null; then
